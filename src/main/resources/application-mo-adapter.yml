@@ -1,0 +1,79 @@
+spring:
+  main:
+    banner-mode: "off"
+  application:
+    name: mo-adapter
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
+  restTemplate:
+    connectTimeout: 5_000
+    readTimeout: 120_000
+    connectionRequestTimeout: 200
+    httpclient:
+      maxTotal: 2000
+      maxConnectPerRoute: 1000
+      enableRetry: true
+      retryTimes: 3
+      keepAliveTime: 10_000
+
+server:
+  tomcat:
+    connection-timeout: 5000
+  max-http-header-size: 102400
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+    min-response-size: 128
+  servlet:
+    session:
+      tracking-modes: cookie
+      cookie:
+        http-only: true
+      timeout: 30m
+  port: 10010
+  ssl:
+    enabled-protocols: TLSv1.2,TLSv1.3
+    key-store: classpath:keystore.p12
+    key-store-password: '{ciphertext}1&9843563F0ADAF6ADF87A6FC748388699&BFF848CF25DD780E6ECBE7FF2A6EF40C'
+    key-store-type: PKCS12
+    key-alias: tomcat
+    ciphers: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_128_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_SHA256,TLS_ECDHE_RSA_WITH_AES_128_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_SHA,TLS_ECDHE_RSA_WITH_AES_256_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_SHA384,TLS_ECDHE_RSA_WITH_AES_256_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_SHA
+
+logging:
+  config: ${classpath:logback-mo-adapter.xml}
+
+ribbon:
+  ReadTimeout: 120000
+  SocketTimeout: 180000
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 120000
+
+sc:
+  scheme: https
+  host: 160.101.21.71
+  port: 26335
+  api:
+    auth: /v3/auth/tokens
+    project: /rest/vdc/v3.1/projects
+    enterpriseProject: /v1.0/enterprise-projects
+    userGroup: /rest/vdc/v3.2/vdcs/{vdc_id}/groups
+    roles: /rest/vdc/v3.0/OS-ROLE/roles/third-party/roles
+    groupRoles: /rest/vdc/v3.2/groups/{group_id}/roles
+    enterpriseGroupRoles: /v1.0/enterprise-projects/{enterprise_project_id}/groups/{group_id}/roles/{role_id}
+    vdcDetail: /rest/vdc/v3.0/vdcs/{vdc_id}
+    user: /rest/vdc/v3.2/vdcs/{vdc_id}/users
+    addUserToGroup: /rest/vdc/v3.2/groups/{group_id}/users/{user_id}
+
+user:
+  pwd: Temp12#$
+  saml:
+    env:
+      plike: '@squatuat.com.hk'
+      prod: '@hkex.com.hk'

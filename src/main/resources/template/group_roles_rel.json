@@ -1,0 +1,35 @@
+{
+  "{env}_cps_{name}_admin_group" : {
+    "variableFields" : [{
+      "cps_admin_aad" : "saml"
+    }, {
+      "cps_admin_local" : "local"
+    }
+    ],
+    "global" : ["ECS Flavor List", "VDC Readonly"],
+    "resourceSpace" : ["ECS Administrator", "SWR Administrator", "AOM FullAccess", "KMS CMKFullAccess", "LTS FullAccess", "SFS FullAccess", "CCE Administrator Role", "DCS FullAccess", "ROMA Administrator", "Resource Space Guest", "Tenant Guest", "VPC Administrator", "EVS FullAccess"],
+    "enterpriseProjects" : ["OBS Administrator"]
+  },
+  "{env}_{name}_admin_group" : {
+    "variableFields" : [{
+      "admin_aad" : "saml"
+    }, {
+      "admin_local" : "local"
+    }
+    ],
+    "global" : ["VDC Readonly"],
+    "resourceSpace" : ["Tenant Guest", "CCE ReadOnlyAccess Policy", "Resource Space Guest", "ECS Operator", "EVS Snapshot", "KMS Operator", "AOM ReadOnlyAccess", "LTS ReadOnlyAccess"],
+    "enterpriseProjects" : ["OBS Administrator"]
+  },
+  "{env}_{name}_supp_group" : {
+    "variableFields" : [{
+      "supp_aad" : "saml"
+    }, {
+      "supp_local" : "local"
+    }
+    ],
+    "global" : ["DB Monitor"],
+    "resourceSpace" : ["CCE ReadOnlyAccess Policy", "Resource Space Guest", "ECS ReadOnly", "AOM ReadOnlyAccess", "LTS ReadOnlyAccess"],
+    "enterpriseProjects" : ["OBS ReadOnlyAccess"]
+  }
+}
