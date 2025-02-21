@@ -1,23 +1,22 @@
 package com.ghca.adapter.service.impl;
 
 import com.ghca.adapter.model.req.RsParam;
+import com.ghca.adapter.model.resp.Record;
+import com.ghca.adapter.model.resp.Result;
 import com.ghca.adapter.service.BaseService;
 import com.ghca.adapter.service.EnterpriseProjectService;
 import com.ghca.adapter.service.ProjectService;
 import com.ghca.adapter.service.ResourceSpaceService;
 import com.ghca.adapter.service.UserGroupService;
 import com.ghca.adapter.service.UserService;
+import com.ghca.adapter.utils.FileOperationUtil;
 import com.ghca.adapter.utils.JsonUtils;
-import com.ghca.adapter.utils.RestUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.ArrayList;
 
 import javax.annotation.Resource;
 
@@ -41,25 +40,43 @@ public class ResourceSpaceServiceImpl extends BaseService implements ResourceSpa
     private UserService userService;
 
     @Override
-    public String createRs(RsParam rsParam) {
-        String errorMessage = null;
-        ResponseEntity<String> projectInVdcResponse = projectService.createProjectInVdc(rsParam);
-        if (projectInVdcResponse == null || !projectInVdcResponse.getStatusCode().is2xxSuccessful()){
-            return "error";
+    public Result createRs(RsParam rsParam, Result result) {
+        result.setResult("success");
+        String filePath = FileOperationUtil.getFilePath("group_roles_rel.json");
+        String groupRolesRel = FileOperationUtil.getTemplate(filePath);
+        //查询资源空间
+        if (projectService.isExist(rsParam, result)){
+            logger.info("Project is already exist");
         }
-        String projectInVdcResult = projectInVdcResponse.getBody();
-        Map<String, Object> project = (Map<String, Object>) JsonUtils.parseJsonStr2Map(projectInVdcResult).get("project");
-        String projectId = project.get("id").toString();
-        ResponseEntity<String> enterpriseProjectInProjectResponse = enterpriseProjectService.createEnterpriseProjectInProject(
-            rsParam, projectId);
-        if (enterpriseProjectInProjectResponse == null || !enterpriseProjectInProjectResponse.getStatusCode().is2xxSuccessful()){
-            return "error";
+        //创建资源空间
+        if (!projectService.createProjectInVdc(rsParam, result)){
+            return result;
         }
-        Map<String, Object> enterpriseProject = (Map<String, Object>) JsonUtils.parseJsonStr2Map(enterpriseProjectInProjectResponse.getBody()).get("enterprise_project");
-        String enterpriseProjectId = enterpriseProject.get("id").toString();
-        List<Map<String, Object>> userGroup = userGroupService.createUserGroupAndAddRoles(rsParam, projectId, enterpriseProjectId);
-
-        String userInGroup = userService.createUserInGroup(rsParam, userGroup, projectId);
-        return null;
+        logger.info("Data after create project: {}", JsonUtils.parseObject2Str(result.getData()));
+        //查询企业项目
+        if (enterpriseProjectService.isExist(rsParam, result)){
+            logger.info("Enterprise project is already exist");
+        }
+        //创建企业项目
+        if (!enterpriseProjectService.createEnterpriseProjectInProject(rsParam, result)){
+            return result;
+        }
+        logger.info("Data after create enterprise project: {}", JsonUtils.parseObject2Str(result.getData()));
+        //创建用户组
+        if (!userGroupService.createUserGroup(rsParam, groupRolesRel, result)){
+            return result;
+        }
+        logger.info("Data after create userGroup: {}", JsonUtils.parseObject2Str(result.getData()));
+        //绑定用户组权限
+        if (!userGroupService.bindRoles(rsParam, groupRolesRel, result)){
+            return result;
+        }
+        logger.info("Data after bind roles: {}", JsonUtils.parseObject2Str(result.getData()));
+        //创建用户并添加到用户组
+        userService.createUserInGroup(rsParam, groupRolesRel, result);
+        logger.info("Data after finish: {}", JsonUtils.parseObject2Str(result.getData()));
+        logger.info("Create finish");
+        return result;
     }
+
 }

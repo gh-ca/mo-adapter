@@ -79,7 +79,7 @@ public class RestUtils {
      * @return String
      */
     public static String buildUrl(String scheme, String host, String port, String uri) {
-        return scheme + "://" + host + ":" + port + uri;
+        return scheme + "://" + host  + uri;
     }
 
     /**

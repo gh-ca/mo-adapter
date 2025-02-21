@@ -1,6 +1,7 @@
 package com.ghca.adapter.service;
 
 import com.ghca.adapter.model.req.RsParam;
+import com.ghca.adapter.model.resp.Result;
 
 import org.springframework.http.ResponseEntity;
 
@@ -11,5 +12,7 @@ import org.springframework.http.ResponseEntity;
  */
 public interface EnterpriseProjectService {
 
-    ResponseEntity<String> createEnterpriseProjectInProject(RsParam rsParam, String projectId);
+    boolean createEnterpriseProjectInProject(RsParam rsParam, Result result);
+
+    boolean isExist(RsParam rsParam, Result result);
 }

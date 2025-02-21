@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
+import javax.validation.constraints.NotBlank;
+
 /**
  * @version v1.0
  * @description:
@@ -11,15 +13,20 @@ import java.util.List;
  */
 public class RsParam {
 
+    @NotBlank(message = "AK can not be empty")
     @JsonProperty("AK")
     private String ak;
+    @NotBlank(message = "SK can not be empty")
     @JsonProperty("SK")
     private String sk;
+    @NotBlank(message = "region can not be empty")
     private String region;
+    @NotBlank(message = "vdc can not be empty")
     private String vdc;
+    @NotBlank(message = "env can not be empty")
     private String env;
+    @NotBlank(message = "name can not be empty")
     private String name;
-    private boolean skip_resource_sapce_provision;
     private List<String> cps_admin_aad;
     private List<String> cps_admin_local;
     private List<String> admin_aad;
@@ -73,14 +80,6 @@ public class RsParam {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public boolean isSkip_resource_sapce_provision() {
-        return skip_resource_sapce_provision;
-    }
-
-    public void setSkip_resource_sapce_provision(boolean skip_resource_sapce_provision) {
-        this.skip_resource_sapce_provision = skip_resource_sapce_provision;
     }
 
     public List<String> getCps_admin_aad() {

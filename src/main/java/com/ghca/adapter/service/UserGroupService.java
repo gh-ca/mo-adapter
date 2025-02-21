@@ -1,6 +1,7 @@
 package com.ghca.adapter.service;
 
 import com.ghca.adapter.model.req.RsParam;
+import com.ghca.adapter.model.resp.Result;
 
 import org.springframework.http.ResponseEntity;
 
@@ -14,5 +15,7 @@ import java.util.Map;
  */
 public interface UserGroupService {
 
-    List<Map<String, Object>> createUserGroupAndAddRoles(RsParam rsParam, String projectId, String enterpriseProjectId);
+    boolean createUserGroup(RsParam rsParam, String groupRolesRel, Result result);
+
+    boolean bindRoles(RsParam rsParam, String groupRolesRel, Result result);
 }

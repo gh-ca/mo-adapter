@@ -1,6 +1,7 @@
 package com.ghca.adapter.service;
 
 import com.ghca.adapter.model.req.RsParam;
+import com.ghca.adapter.model.resp.Result;
 
 import java.util.List;
 import java.util.Map;
@@ -12,5 +13,5 @@ import java.util.Map;
  */
 public interface UserService {
 
-    String createUserInGroup(RsParam rsParam, List<Map<String, Object>> groups, String projectId);
+    boolean createUserInGroup(RsParam rsParam, String groupRolesRel, Result result);
 }

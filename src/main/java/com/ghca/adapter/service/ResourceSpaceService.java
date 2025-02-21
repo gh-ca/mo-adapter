@@ -1,6 +1,7 @@
 package com.ghca.adapter.service;
 
 import com.ghca.adapter.model.req.RsParam;
+import com.ghca.adapter.model.resp.Result;
 
 /**
  * @version v1.0
@@ -9,5 +10,5 @@ import com.ghca.adapter.model.req.RsParam;
  */
 public interface ResourceSpaceService {
 
-    String createRs(RsParam rsParam);
+    Result createRs(RsParam rsParam, Result result);
 }

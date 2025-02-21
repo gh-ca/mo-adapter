@@ -17,6 +17,7 @@ spring:
       enableRetry: true
       retryTimes: 3
       keepAliveTime: 10_000
+      keepAliveTargetHosts: "{'127.0.0.1': 5000, '127.0.0.2': 3000}"
 
 server:
   tomcat:
@@ -57,11 +58,12 @@ hystrix:
 
 sc:
   scheme: https
-  host: 160.101.21.71
-  port: 26335
+  host: sc.830type1.com
+  port: 443
   api:
     auth: /v3/auth/tokens
     project: /rest/vdc/v3.1/projects
+    projectList: /rest/vdc/v3.0/vdcs/{vdc_id}/projects
     enterpriseProject: /v1.0/enterprise-projects
     userGroup: /rest/vdc/v3.2/vdcs/{vdc_id}/groups
     roles: /rest/vdc/v3.0/OS-ROLE/roles/third-party/roles
