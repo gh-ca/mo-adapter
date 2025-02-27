@@ -29,6 +29,7 @@ public class EnterpriseProjectServiceImpl extends BaseService implements Enterpr
 
     @Override
     public boolean createEnterpriseProjectInProject(RsParam rsParam, Result result) {
+        logger.info("Start create enterprise project");
         Map<String, Object> existingData = (Map<String, Object>) result.getData();
         String url = RestUtils.buildUrl(scProperties.getScheme(), scProperties.getHost(), scProperties.getPort().toString(), scProperties.getApi().get("enterpriseProject"));
         Map<String, Object> body = new HashMap<>();
@@ -78,7 +79,7 @@ public class EnterpriseProjectServiceImpl extends BaseService implements Enterpr
         for (Map<String, Object> enterpriseProject : enterpriseProjects){
             if (enterpriseProjectName.equals(enterpriseProject.get("name"))){
                 String enterpriseProjectId = (String)enterpriseProject.get("id");
-                Map<String, Object> data = new HashMap<>();
+                Map<String, Object> data = (Map<String, Object>) result.getData();
                 data.put("enterpriseProjectId", enterpriseProjectId);
                 result.setData(data);
                 return true;

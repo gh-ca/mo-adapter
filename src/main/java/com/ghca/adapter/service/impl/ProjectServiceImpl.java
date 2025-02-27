@@ -8,7 +8,6 @@ import com.ghca.adapter.service.ProjectService;
 import com.ghca.adapter.utils.JsonUtils;
 import com.ghca.adapter.utils.RestUtils;
 
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @version v1.0
@@ -32,6 +30,7 @@ public class ProjectServiceImpl extends BaseService implements ProjectService {
 
     @Override
     public boolean createProjectInVdc(RsParam rsParam, Result result) {
+        logger.info("start create project");
         String url = RestUtils.buildUrl(scProperties.getScheme(), scProperties.getHost(), scProperties.getPort().toString(), scProperties.getApi().get("project"));
         Map<String, Object> body = buildBody(rsParam);
         /*

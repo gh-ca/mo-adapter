@@ -1,7 +1,7 @@
 package com.ghca.adapter.service;
 
+import com.ghca.adapter.model.properties.CloudProperties;
 import com.ghca.adapter.model.properties.ScProperties;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -13,5 +13,7 @@ public abstract class BaseService {
 
     @Autowired
     protected ScProperties scProperties;
+    @Autowired
+    protected CloudProperties cloudProperties;
 
 }

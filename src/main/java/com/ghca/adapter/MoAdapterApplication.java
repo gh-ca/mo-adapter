@@ -15,9 +15,11 @@ import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactor
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import javax.net.ssl.SSLContext;
 
+@EnableSwagger2
 @EnableFeignClients(basePackages = "com.ghca.adapter")
 @SpringBootApplication(scanBasePackages = "com.ghca.adapter")
 public class MoAdapterApplication {

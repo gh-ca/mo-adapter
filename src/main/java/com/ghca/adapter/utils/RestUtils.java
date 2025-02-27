@@ -598,6 +598,10 @@ public class RestUtils {
         if(!headers.containsKey("Accept")){
             headers.put("Accept", "application/json; charset=UTF-8");
         }
+        ThreadLocal<Map<String, Object>> threadLocal = ThreadUtils.getThreadLocal();
+        if (threadLocal.get() != null) {
+            headers.put("X-Domain-Id", (String) threadLocal.get().get("domainId"));
+        }
         return headers;
     }
 

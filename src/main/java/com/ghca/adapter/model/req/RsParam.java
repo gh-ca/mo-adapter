@@ -21,6 +21,8 @@ public class RsParam {
     private String sk;
     @NotBlank(message = "region can not be empty")
     private String region;
+    @NotBlank(message = "domain can not be empty")
+    private String domain;
     @NotBlank(message = "vdc can not be empty")
     private String vdc;
     @NotBlank(message = "env can not be empty")
@@ -56,6 +58,14 @@ public class RsParam {
 
     public void setRegion(String region) {
         this.region = region;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
     }
 
     public String getVdc() {

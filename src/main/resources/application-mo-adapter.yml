@@ -18,6 +18,9 @@ spring:
       retryTimes: 3
       keepAliveTime: 10_000
       keepAliveTargetHosts: "{'127.0.0.1': 5000, '127.0.0.2': 3000}"
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
 server:
   tomcat:
@@ -37,7 +40,8 @@ server:
   ssl:
     enabled-protocols: TLSv1.2,TLSv1.3
     key-store: classpath:keystore.p12
-    key-store-password: '{ciphertext}1&9843563F0ADAF6ADF87A6FC748388699&BFF848CF25DD780E6ECBE7FF2A6EF40C'
+#    key-store-password: '{ciphertext}1&9843563F0ADAF6ADF87A6FC748388699&BFF848CF25DD780E6ECBE7FF2A6EF40C'
+    key-store-password: 'Pbu4@123'
     key-store-type: PKCS12
     key-alias: tomcat
     ciphers: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_128_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_SHA256,TLS_ECDHE_RSA_WITH_AES_128_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_SHA,TLS_ECDHE_RSA_WITH_AES_256_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_SHA384,TLS_ECDHE_RSA_WITH_AES_256_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_SHA
@@ -73,9 +77,21 @@ sc:
     user: /rest/vdc/v3.2/vdcs/{vdc_id}/users
     addUserToGroup: /rest/vdc/v3.2/groups/{group_id}/users/{user_id}
 
+cloud:
+  scheme: https
+  host: {service}.{region}.830type1.com
+  api:
+    elb: /v2.0/lbaas/loadbalancers/{loadbalancer_id}
+    qoS: /v2.0/lbaas/flavors
+    queryQoS: /v2.0/lbaas/flavors/{flavor_id}
+
+
 user:
   pwd: Temp12#$
   saml:
     env:
       plike: '@squatuat.com.hk'
       prod: '@hkex.com.hk'
+QoS:
+  L4: Default_L4_QoS_
+  L7: Default_L7_QoS_

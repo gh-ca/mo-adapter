@@ -45,6 +45,7 @@ public class UserServiceImpl extends BaseService implements UserService {
 
     @Override
     public boolean createUserInGroup(RsParam rsParam, String groupRolesRel, Result result) {
+        logger.info("Start create user");
         String userUrl = RestUtils.buildUrl(scProperties.getScheme(), scProperties.getHost(), scProperties.getPort().toString(), scProperties.getApi().get("user").replace("{vdc_id}", rsParam.getVdc()));
         Map<Object, Object> groupRolesRelMap = JsonUtils.parseJsonStr2Map(groupRolesRel);
         Map<String, Object> existingData = (Map<String, Object>) result.getData();
@@ -143,7 +144,7 @@ public class UserServiceImpl extends BaseService implements UserService {
         query.put("limit", limit);
         List<Map<String, Object>> userList = new ArrayList<>();
         do {
-            ResponseEntity<String> response = RestUtils.get(url, String.class, rsParam.getAk(), rsParam.getSk());
+            ResponseEntity<String> response = RestUtils.get(url, query, String.class, rsParam.getAk(), rsParam.getSk());
             if (response == null || !response.getStatusCode().is2xxSuccessful()){
                 logger.error("Query users failed: {}", response.getBody());
             }

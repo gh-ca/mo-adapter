@@ -35,8 +35,9 @@ public class UserGroupServiceImpl extends BaseService implements UserGroupServic
 
     @Override
     public boolean createUserGroup(RsParam rsParam, String groupRolesRel, Result result) {
+        logger.info("Start create user groups");
         Map<String, Object> existingData = (Map<String, Object>) result.getData();
-        String uri = scProperties.getApi().get("userGroup").replace("{vdc_id}", rsParam.getVdc());
+        String uri = scProperties.getApi().get("user group").replace("{vdc_id}", rsParam.getVdc());
         String url = RestUtils.buildUrl(scProperties.getScheme(), scProperties.getHost(), scProperties.getPort().toString(), uri);
 
         //vdc下所有的用户组列表
@@ -51,6 +52,7 @@ public class UserGroupServiceImpl extends BaseService implements UserGroupServic
 
         Map<Object, Object> groupRolesRelMap = JsonUtils.parseJsonStr2Map(groupRolesRel);
         int count = 0;
+        int failed = 0;
         /* 创建3个用户组
          * {env}_cps_{name}_admin_group
          * {env}_{name}_admin_group
@@ -64,17 +66,18 @@ public class UserGroupServiceImpl extends BaseService implements UserGroupServic
                 HashMap<String, Object> userGroup = new HashMap<>();
                 userGroup.put(name, userGroupId);
                 existingGroups.add(userGroup);
-                logger.info("UserGroup {} is already existing", name);
+                logger.info("User group {} is already existing", name);
                 continue;
             }
             //创建用户组
             ResponseEntity<String> responseEntity = createUserGroup(rsParam, name, url);
             if (responseEntity == null || !responseEntity.getStatusCode().is2xxSuccessful()){
-                logger.error("Create userGroup {} failed: {}", name, responseEntity.getBody());
+                logger.error("Create user group {} failed: {}", name, responseEntity.getBody());
                 Record record = new Record();
-                record.setOperation("Create userGroup " + name).setResult("Failed").setRootCause(responseEntity.getBody());
+                record.setOperation("Create user group " + name).setResult("Failed").setRootCause(responseEntity.getBody());
                 result.setResult("Partial success");
                 result.getMessage().add(record);
+                failed++;
                 continue;
             }
             count++;
@@ -84,7 +87,7 @@ public class UserGroupServiceImpl extends BaseService implements UserGroupServic
             group.put(name, groupId);
             newGroups.add(group);
         }
-        if (count == 0) {
+        if (count == 0 && failed == groupRolesRelMap.size()) {
             return false;
         }
         existingData.put("newGroups", newGroups);
@@ -102,9 +105,9 @@ public class UserGroupServiceImpl extends BaseService implements UserGroupServic
         query.put("limit", limit);
         List<Map<String, Object>> userGroupsList = new ArrayList<>();
         do {
-            ResponseEntity<String> response = RestUtils.get(url, String.class, rsParam.getAk(), rsParam.getSk());
+            ResponseEntity<String> response = RestUtils.get(url, query, String.class, rsParam.getAk(), rsParam.getSk());
             if (response == null || !response.getStatusCode().is2xxSuccessful()){
-                logger.error("Query userGroup failed: {}", response.getBody());
+                logger.error("Query user group failed: {}", response.getBody());
             }
             dataTotal = (int) JsonUtils.parseJsonStr2Map(response.getBody()).get("total");
             userGroupsList.addAll((List<Map<String, Object>>)JsonUtils.parseJsonStr2Map(response.getBody()).get("groups"));
@@ -116,21 +119,11 @@ public class UserGroupServiceImpl extends BaseService implements UserGroupServic
 
     @Override
     public boolean bindRoles(RsParam rsParam, String groupRolesRel, Result result) {
+        logger.info("Start bind roles");
         //查询vdc详情获取domain_id
-        ResponseEntity<String> vdcResponseEntity = queryVdcDetail(rsParam);
-        if (vdcResponseEntity == null || !vdcResponseEntity.getStatusCode().is2xxSuccessful()){
-            logger.error("Query vdcDetail failed", vdcResponseEntity.getBody());
-            Record record = new Record();
-            record.setOperation("Bind roles : Query vdc detail").setResult("Failed").setRootCause(vdcResponseEntity.getBody());
-            result.setResult("partial success");
-            result.getMessage().add(record);
-            return false;
-        }
-
-        Map<String, Object> vdc = (Map<String, Object>) JsonUtils.parseJsonStr2Map(vdcResponseEntity.getBody()).get("vdc");
-        String domainId = (String) vdc.get("domain_id");
+        Map<String, Object> existingData = (Map<String, Object>) result.getData();
         HashMap<String, Object> query = new HashMap<>();
-        query.put("domain_id", domainId);
+        query.put("domain_id", rsParam.getDomain());
         //查询权限列表
         String rolesUrl = RestUtils.buildUrl(scProperties.getScheme(), scProperties.getHost(), scProperties.getPort().toString(), scProperties.getApi().get("roles"));
         ResponseEntity<String> rolesResponse = RestUtils.get(rolesUrl, query, String.class, rsParam.getAk(), rsParam.getSk());
@@ -172,7 +165,6 @@ public class UserGroupServiceImpl extends BaseService implements UserGroupServic
             .collect(Collectors.toMap(map -> (String)map.get("display_name"), map -> (String)map.get("id"), (existingValue, newValue) -> existingValue));
 
         Map<Object, Object> groupRolesRelMap = JsonUtils.parseJsonStr2Map(groupRolesRel);
-        Map<String, Object> existingData = (Map<String, Object>) result.getData();
         String projectId = (String) existingData.get("projectId");
         String enterpriseProjectId = (String) existingData.get("enterpriseProjectId");
         List<Map<String, Object>> newGroups = (List<Map<String, Object>>) existingData.get("newGroups");
@@ -236,7 +228,7 @@ public class UserGroupServiceImpl extends BaseService implements UserGroupServic
                     Map<String, Object> role = new HashMap<>();
                     List<Map<String, String>> targets = new ArrayList<>();
                     Map<String, String> target = new HashMap<>();
-                    target.put("id", domainId);
+                    target.put("id", rsParam.getDomain());
                     role.put("id", id);
                     if (resourceSpaceIds.contains(id)){
                         Map<String, String> addTarget = new HashMap<>();
@@ -314,13 +306,6 @@ public class UserGroupServiceImpl extends BaseService implements UserGroupServic
         return true;
     }
 
-
-    private ResponseEntity<String> queryVdcDetail(RsParam rsParam){
-        String uri = scProperties.getApi().get("vdcDetail").replace("{vdc_id}", rsParam.getVdc());
-        String url = RestUtils.buildUrl(scProperties.getScheme(), scProperties.getHost(), scProperties.getPort().toString(), uri);
-        ResponseEntity<String> response = RestUtils.get(url, String.class, rsParam.getAk(), rsParam.getSk());
-        return response;
-    }
 
     private ResponseEntity<String> createUserGroup(RsParam rsParam, String name, String url) {
         Map<String, Object> body = new HashMap<>();
