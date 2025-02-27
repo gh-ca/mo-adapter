@@ -1,0 +1,116 @@
+#!/bin/bash
+#chkconfig: 2345 80 90
+#description:adapter
+#processname:adapter
+
+baseDir='/data/mo-adapter'
+services=('mo-adapter:10010:mo-adapter.jar:1G')
+jvm_arg=""
+
+timeout=180
+
+curService=$1
+curOperate=$2
+curDir=$(cd $(dirname $0);pwd)
+
+if [[ -z $curService ]] || [[ -z $curOperate  ]];then
+    echo '<service name: mo-adapter> <operation: start/stop/restart/status>'
+    exit 1
+fi
+
+if [[ $curOperate == 'start' ]] || [[ $curOperate == 'stop' ]] || [[ $curOperate == 'restart' ]] || [[ $curOperate == 'status' ]]; then
+    echo -n ''
+else
+    echo 'operation: start/stop/restart/status'
+    exit 1
+fi
+
+function checkPort() {
+    netstat -tlpn | grep -w $1 >/dev/null
+}
+
+function getPid() {
+    pid=$(lsof -i:$1 | grep LISTEN | awk '{print $2}')
+    return pid
+}
+
+function startService() {
+    if checkPort $2
+    then
+        echo -e "[$1]: \033[1;32m running. \033[0m"
+    else
+        echo -e "[$1]: starting."
+        command="nohup java -server -Dconfig.path=$baseDir/config $jvm_arg -Xms$4 -Xmx$4 -jar jars/$3 1>/dev/null 2>&1 &"
+        /usr/sbin/runuser -l optuser -c "cd $baseDir;$command"
+
+        useTime=0
+        while true
+        do
+            if checkPort $2; then
+                echo -e "\033[1;32m Success start\n \033[0m"
+                break
+            else
+                echo -n "."
+                sleep 2
+            fi
+
+            let useTime+=5
+            if [ $useTime -gt $timeout ]; then
+                echo -e "[$1]: \033[1;32m Fail: start timeout\n \033[0m"
+                exit 1
+            fi
+        done
+     fi
+}
+
+function stopService() {
+    if checkPort $2
+    then
+        /usr/sbin/runuser -l optuser -c "kill -9 $(lsof -i:$2 | grep LISTEN | awk '{print $2}')"
+        echo -e "[$1]: \033[1;32m stoped. \033[0m"
+    else
+        echo -e "[$1]: \033[1;32m Down. \033[0m"
+    fi
+}
+
+function checkService() {
+    if checkPort $2
+    then
+        echo -e  "[$1]: \033[1;32m running. \033[0m"
+    else
+        echo -e "[$1]: \033[1;32m Down. \033[0m"
+    fi
+}
+
+serviceFlag=false
+for item in ${services[*]}
+do
+    serviceName=$(echo $item | awk -F':' '{print $1}')
+    servicePort=$(echo $item | awk -F':' '{print $2}')
+    serviceJar=$(echo $item | awk -F':' '{print $3}')
+    serviceLimit=$(echo $item | awk -F':' '{print $4}')
+
+    if [[ $curService == $serviceName ]] || [[ $curService == 'all' ]]; then
+        serviceFlag=true
+        case $curOperate in
+            start)
+                startService $serviceName $servicePort $serviceJar $serviceLimit
+                ;;
+            stop)
+                stopService $serviceName $servicePort
+                ;;
+            restart)
+                stopService $serviceName $servicePort
+                sleep 3
+                startService $serviceName $servicePort $serviceJar  $serviceLimit
+                ;;
+            status)
+                checkService $serviceName $servicePort
+                ;;
+        esac
+    fi
+done
+
+
+$serviceFlag || echo '<service name: mo-adapter> <operation: start/stop/restart/status>'
+exit 0
