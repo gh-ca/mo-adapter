@@ -1,8 +1,8 @@
 package com.ghca.adapter.controller;
 
-import com.ghca.adapter.model.req.RsParam;
+import com.ghca.adapter.model.req.GaussDBParam;
 import com.ghca.adapter.model.resp.Result;
-import com.ghca.adapter.service.ResourceSpaceService;
+import com.ghca.adapter.service.GaussDBService;
 import com.ghca.adapter.utils.Constant;
 import com.ghca.adapter.utils.JsonUtils;
 import io.swagger.annotations.Api;
@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,18 +29,18 @@ import java.util.stream.Collectors;
 @Api
 @RestController
 @RequestMapping("/")
-public class ResourceSpaceController {
+public class GaussDBController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ResourceSpaceController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GaussDBController.class);
 
     @Resource
-    private ResourceSpaceService resourceSpaceService;
+    private GaussDBService gaussDBService;
 
-    @ApiOperation(value = "IAM Api", httpMethod = "POST")
-    @ApiResponse(code = 200, message = "Create success", response = Result.class)
-    @PostMapping("resource-space-iam")
-    public Result resourceSpace(@RequestBody @Validated RsParam rsParam, BindingResult bindingResult){
-        LOGGER.info("Start create resource space");
+    @ApiOperation(value = "GaussDB Api", httpMethod = "PUT")
+    @ApiResponse(code = 200, message = "Update success", response = Result.class)
+    @PutMapping("resource-gaussdb")
+    public Result gaussDb(@RequestBody @Validated GaussDBParam gaussDBParam, BindingResult bindingResult){
+        LOGGER.info("Start on tde");
         Result result = new Result("success");
         if (bindingResult.hasErrors()){
             String errorInfo = JsonUtils.parseObject2Str(bindingResult.getAllErrors()
@@ -50,6 +50,6 @@ public class ResourceSpaceController {
             LOGGER.error("Param validation failed: {}", errorInfo);
             return result.addMessage("Param validation", Constant.FAILED, errorInfo).setResult(Constant.FAILED);
         }
-        return resourceSpaceService.createRs(rsParam, result);
+        return gaussDBService.turnOnTde(gaussDBParam, result);
     }
 }

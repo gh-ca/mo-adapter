@@ -1,5 +1,7 @@
 package com.ghca.adapter.model.resp;
 
+import com.google.common.collect.Lists;
+
 import java.util.List;
 
 /**
@@ -10,30 +12,45 @@ import java.util.List;
 public class Result {
 
     private String result;
-    private List<Record> message;
+    private List<Record> message = Lists.newArrayList();
     private Object data;
+
+    public Result() {}
+
+    public Result(String result) {
+        this.result = result;
+    }
+
+    public Result(String result, Object data) {
+        this.result = result;
+        this.data = data;
+    }
 
     public String getResult() {
         return result;
     }
 
-    public void setResult(String result) {
+    public Result setResult(String result) {
         this.result = result;
+        return this;
     }
 
     public List<Record> getMessage() {
         return message;
     }
 
-    public void setMessage(List<Record> message) {
-        this.message = message;
+    public Result addMessage(String operation, String result, String rootCause) {
+        Record record = new Record(operation, result, rootCause);
+        this.message.add(record);
+        return this;
     }
 
     public Object getData() {
         return data;
     }
 
-    public void setData(Object data) {
+    public Result setData(Object data) {
         this.data = data;
+        return this;
     }
 }

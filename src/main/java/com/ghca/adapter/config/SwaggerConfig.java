@@ -23,6 +23,6 @@ public class SwaggerConfig {
                 .apis(RequestHandlerSelectors.basePackage("com.ghca.adapter.controller"))
                 .paths(PathSelectors.any())
                 .build()
-                .protocols(Sets.newHashSet("https"));
+                .protocols(Sets.newHashSet("http"));
     }
 }

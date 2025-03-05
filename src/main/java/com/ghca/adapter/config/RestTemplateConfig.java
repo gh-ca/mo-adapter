@@ -4,7 +4,6 @@
 
 package com.ghca.adapter.config;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HeaderElement;
 import org.apache.http.HeaderElementIterator;
 import org.apache.http.HttpHost;
@@ -31,18 +30,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpRequest;
-import org.springframework.http.client.BufferingClientHttpRequestFactory;
-import org.springframework.http.client.ClientHttpRequestExecution;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.client.*;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
+import javax.net.ssl.SSLContext;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -51,13 +45,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.net.ssl.SSLContext;
+import java.util.*;
 
 /**
  * RestTemplate配置类
@@ -69,7 +57,7 @@ import javax.net.ssl.SSLContext;
  */
 @Configuration
 public class RestTemplateConfig {
-    private static Logger logger = LoggerFactory.getLogger(RestTemplateConfig.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestTemplateConfig.class);
 
     private static final String UTF_8 = "UTF-8";
 
@@ -178,7 +166,7 @@ public class RestTemplateConfig {
                 .loadTrustMaterial(null, (X509Certificate[] var1, String var2) -> true)
                 .build();
         } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
-            logger.error(e.getMessage());
+            LOGGER.error(e.getMessage());
         }
         SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext,
             NoopHostnameVerifier.INSTANCE);
@@ -223,7 +211,7 @@ public class RestTemplateConfig {
         return (response, context) -> {
             // Honor 'keep-alive' header
             HeaderElementIterator it = new BasicHeaderElementIterator(response.headerIterator(HTTP.CONN_KEEP_ALIVE));
-            logger.debug("HeaderElement:{}", it);
+            LOGGER.debug("HeaderElement:{}", it);
             while (it.hasNext()) {
                 HeaderElement he = it.nextElement();
                 String param = he.getName();
@@ -233,7 +221,7 @@ public class RestTemplateConfig {
                         // 1.服务器有时候会告诉客户端长连接的超时时间，如果有则设置为服务器的返回值
                         return Long.parseLong(value) * ONE_THOUSAND;
                     } catch (NumberFormatException ignore) {
-                        logger.error("Parse long connection expiration time exception!", ignore);
+                        LOGGER.error("Parse long connection expiration time exception!", ignore);
                     }
                 }
             }
@@ -264,9 +252,6 @@ public class RestTemplateConfig {
 
         @Override
         public void handleError(ClientHttpResponse response) throws IOException {
-            // 响应状态码错误时不抛出异常
-            // throw new HttpClientErrorException(response.getStatusCode(), response.getStatusText(),
-            //     response.getHeaders(), IOUtils.toByteArray(response.getBody()), Charset.forName(UTF_8));
         }
     }
 
@@ -314,7 +299,7 @@ public class RestTemplateConfig {
                 .append(new String(body, Charset.forName(UTF_8)))
                 .append(System.lineSeparator())
                 .append("===========================request end==============================");
-            logger.info(log.toString());
+            LOGGER.info(log.toString());
         }
 
         private void traceResponse(byte[] body, HttpRequest request, ClientHttpResponse response, float time)
@@ -372,7 +357,7 @@ public class RestTemplateConfig {
                 .append(inputStringBuilder.toString())
                 .append(System.lineSeparator())
                 .append("===========================response end==============================");
-            logger.info(log.toString());
+            LOGGER.info(log.toString());
         }
 
         /**
@@ -420,7 +405,7 @@ public class RestTemplateConfig {
                 .append(inputStringBuilder.toString())
                 .append(System.lineSeparator())
                 .append("===========================response end==============================");
-            logger.error(log.toString());
+            LOGGER.error(log.toString());
         }
     }
 }

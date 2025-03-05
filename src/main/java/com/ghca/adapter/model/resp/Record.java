@@ -11,30 +11,21 @@ public class Record {
     private String result;
     private String rootCause;
 
-    public String getOperation() {
-        return operation;
+    public Record(String operation, String result, String rootCause) {
+        this.operation = operation;
+        this.result = result;
+        this.rootCause = rootCause;
     }
 
-    public Record setOperation(String operation) {
-        this.operation = operation;
-        return this;
+    public String getOperation() {
+        return operation;
     }
 
     public String getResult() {
         return result;
     }
 
-    public Record setResult(String result) {
-        this.result = result;
-        return this;
-    }
-
     public String getRootCause() {
         return rootCause;
-    }
-
-    public Record setRootCause(String rootCause) {
-        this.rootCause = rootCause;
-        return this;
     }
 }

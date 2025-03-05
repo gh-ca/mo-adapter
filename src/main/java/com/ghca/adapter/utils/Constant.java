@@ -18,6 +18,19 @@ public final class Constant {
             "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
             "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"};
     public static final String SECURE_RANDOM_ALGORITHM_NATIVE_PRNG_NON_BLOCKING = "NativePRNGNonBlocking";
+    public static final String L_4_FLAVOR_ID = "l4_flavor_id";
+    public static final String L_7_FLAVOR_ID = "l7_flavor_id";
+    public static final String VPC = "vpc";
+    public static final String SAML = "saml";
+    public static final String PLIKE = "plike";
+    public static final String PROD = "prod";
+    public static final String L4 = "l4";
+    public static final String L7 = "l7";
+    public static final String API = "api";
+    public static final String GAUSSDB = "gaussdb";
+    public static final String RUNNING = "Running";
+    public static final String FAILED = "Failed";
+    public static final String COMPLETED = "Completed";
 
     private Constant() {
     }

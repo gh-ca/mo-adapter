@@ -1,13 +1,12 @@
 package com.ghca.adapter.service.impl;
 
 import com.ghca.adapter.model.req.RsParam;
-import com.ghca.adapter.model.resp.Record;
 import com.ghca.adapter.model.resp.Result;
 import com.ghca.adapter.service.BaseService;
 import com.ghca.adapter.service.EnterpriseProjectService;
+import com.ghca.adapter.utils.Constant;
 import com.ghca.adapter.utils.JsonUtils;
 import com.ghca.adapter.utils.RestUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -25,11 +24,11 @@ import java.util.Map;
 @Service
 public class EnterpriseProjectServiceImpl extends BaseService implements EnterpriseProjectService {
 
-    private static Logger logger = LoggerFactory.getLogger(EnterpriseProjectServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EnterpriseProjectServiceImpl.class);
 
     @Override
     public boolean createEnterpriseProjectInProject(RsParam rsParam, Result result) {
-        logger.info("Start create enterprise project");
+        LOGGER.info("Start create enterprise project");
         Map<String, Object> existingData = (Map<String, Object>) result.getData();
         String url = RestUtils.buildUrl(scProperties.getScheme(), scProperties.getHost(), scProperties.getPort().toString(), scProperties.getApi().get("enterpriseProject"));
         Map<String, Object> body = new HashMap<>();
@@ -45,13 +44,9 @@ public class EnterpriseProjectServiceImpl extends BaseService implements Enterpr
          * }
          */
         ResponseEntity<String> responseEntity = RestUtils.post(url, body, String.class, rsParam.getAk(), rsParam.getSk());
-        if (responseEntity == null || !responseEntity.getStatusCode().is2xxSuccessful()){
-            logger.error("Create enterprise project failed: {}", responseEntity.getBody());
-            result.setResult("Partial success");
-            Record record = new Record();
-            record.setOperation("Create enterprise project");
-            record.setResult("Failed").setRootCause(responseEntity.getBody());
-            result.getMessage().add(record);
+        if (!responseEntity.getStatusCode().is2xxSuccessful()){
+            LOGGER.error("Create enterprise project failed: {}", responseEntity.getBody());
+            result.addMessage("Create enterprise project", Constant.FAILED, responseEntity.getBody()).setResult("Partial success");
             return false;
         }
         Map<String, Object> enterpriseProject = (Map<String, Object>) JsonUtils.parseJsonStr2Map(responseEntity.getBody()).get("enterprise_project");
@@ -71,8 +66,8 @@ public class EnterpriseProjectServiceImpl extends BaseService implements Enterpr
         query.put("project_id", projectId);
         query.put("name", enterpriseProjectName);
         ResponseEntity<String> responseEntity = RestUtils.get(url, query, String.class, rsParam.getAk(), rsParam.getSk());
-        if (responseEntity == null || !responseEntity.getStatusCode().is2xxSuccessful()){
-            logger.error("Query enterprise project failed: {}", responseEntity.getBody());
+        if (!responseEntity.getStatusCode().is2xxSuccessful()){
+            LOGGER.error("Query enterprise project failed: {}", responseEntity.getBody());
             return false;
         }
         List<Map<String, Object>> enterpriseProjects = (List<Map<String, Object>>) JsonUtils.parseJsonStr2Map(responseEntity.getBody()).get("enterprise_projects");

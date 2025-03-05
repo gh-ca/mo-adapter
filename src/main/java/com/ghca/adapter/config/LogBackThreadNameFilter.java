@@ -3,15 +3,9 @@ package com.ghca.adapter.config;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
+import javax.servlet.*;
 import java.io.IOException;
 import java.security.SecureRandom;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 
 /**
  * @version v1.0

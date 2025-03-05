@@ -4,6 +4,8 @@
       "cps_admin_aad" : "saml"
     }, {
       "cps_admin_local" : "local"
+    }, {
+      "cps_tf_admin_local" : "api"
     }
     ],
     "global" : ["ECS Flavor List", "VDC Readonly"],

@@ -2,9 +2,8 @@ package com.ghca.adapter.model.req;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.List;
-
 import javax.validation.constraints.NotBlank;
+import java.util.List;
 
 /**
  * @version v1.0
@@ -35,6 +34,7 @@ public class RsParam {
     private List<String> admin_local;
     private List<String> supp_aad;
     private List<String> supp_local;
+    private List<String> cps_tf_admin_local;
 
     public String getAk() {
         return ak;
@@ -138,5 +138,13 @@ public class RsParam {
 
     public void setSupp_local(List<String> supp_local) {
         this.supp_local = supp_local;
+    }
+
+    public List<String> getCps_tf_admin_local() {
+        return cps_tf_admin_local;
+    }
+
+    public void setCps_tf_admin_local(List<String> cps_tf_admin_local) {
+        this.cps_tf_admin_local = cps_tf_admin_local;
     }
 }

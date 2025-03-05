@@ -5,7 +5,6 @@
 package com.ghca.adapter.utils;
 
 import okhttp3.OkHttpClient;
-
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -17,19 +16,13 @@ import org.openeuler.BGMProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
-import java.security.Security;
+import java.security.*;
 import java.security.cert.X509Certificate;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
-import javax.net.ssl.*;
 
 public class SSLCipherSuiteUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(SSLCipherSuiteUtil.class);

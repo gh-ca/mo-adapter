@@ -6,7 +6,6 @@ package com.ghca.adapter.utils;
 
 import com.cloud.apigateway.sdk.utils.Client;
 import com.cloud.apigateway.sdk.utils.Request;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -21,13 +20,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.annotation.PostConstruct;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.annotation.PostConstruct;
 
 /**
  * RestUtils
@@ -562,10 +560,9 @@ public class RestUtils {
             throw new RuntimeException(e);
         }
 
-        HttpEntity httpEntity = new HttpEntity(body, httpHeaders);
-        ResponseEntity<T> responseEntity = restTemplate.exchange(buildUri(uri, uriVariables, queryVariable), httpMethod,
+        HttpEntity<Object> httpEntity = new HttpEntity<>(body, httpHeaders);
+        return restTemplate.exchange(buildUri(uri, uriVariables, queryVariable), httpMethod,
                 httpEntity, clazz);
-        return responseEntity;
     }
 
     /**
@@ -600,7 +597,14 @@ public class RestUtils {
         }
         ThreadLocal<Map<String, Object>> threadLocal = ThreadUtils.getThreadLocal();
         if (threadLocal.get() != null) {
-            headers.put("X-Domain-Id", (String) threadLocal.get().get("domainId"));
+            String domainId = (String) threadLocal.get().get("domainId");
+            String projectId = (String) threadLocal.get().get("projectId");
+            if (StringUtils.isNoneBlank(domainId)){
+                headers.put("X-Domain-Id", domainId);
+            }
+            if (StringUtils.isNoneBlank(projectId)){
+                headers.put("X-Project-Id", projectId);
+            }
         }
         return headers;
     }

@@ -1,13 +1,12 @@
 package com.ghca.adapter.service.impl;
 
 import com.ghca.adapter.model.req.RsParam;
-import com.ghca.adapter.model.resp.Record;
 import com.ghca.adapter.model.resp.Result;
 import com.ghca.adapter.service.BaseService;
 import com.ghca.adapter.service.ProjectService;
+import com.ghca.adapter.utils.Constant;
 import com.ghca.adapter.utils.JsonUtils;
 import com.ghca.adapter.utils.RestUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +25,11 @@ import java.util.Map;
 @Service
 public class ProjectServiceImpl extends BaseService implements ProjectService {
 
-    private static Logger logger = LoggerFactory.getLogger(ProjectServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProjectServiceImpl.class);
 
     @Override
     public boolean createProjectInVdc(RsParam rsParam, Result result) {
-        logger.info("start create project");
+        LOGGER.info("start create project");
         String url = RestUtils.buildUrl(scProperties.getScheme(), scProperties.getHost(), scProperties.getPort().toString(), scProperties.getApi().get("project"));
         Map<String, Object> body = buildBody(rsParam);
         /*
@@ -47,13 +46,9 @@ public class ProjectServiceImpl extends BaseService implements ProjectService {
          * }
          */
         ResponseEntity<String> responseEntity = RestUtils.post(url, body, String.class, rsParam.getAk(), rsParam.getSk());
-        if (responseEntity == null || !responseEntity.getStatusCode().is2xxSuccessful()){
-            logger.error("Create project failed: {}", responseEntity.getBody());
-            result.setResult("Failed");
-            Record record = new Record();
-            record.setOperation("Create project");
-            record.setResult("Failed").setRootCause(responseEntity.getBody());
-            result.getMessage().add(record);
+        if (!responseEntity.getStatusCode().is2xxSuccessful()){
+            LOGGER.error("Create project failed: {}", responseEntity.getBody());
+            result.addMessage("Create project", Constant.FAILED, responseEntity.getBody()).setResult(Constant.FAILED);
             return false;
         }
         Map<String, Object> project = (Map<String, Object>) JsonUtils.parseJsonStr2Map(responseEntity.getBody()).get("project");
@@ -87,8 +82,8 @@ public class ProjectServiceImpl extends BaseService implements ProjectService {
         String projectName = rsParam.getRegion() + "_" + rsParam.getEnv() + "_" + rsParam.getName() + "_rs_vdc3";
         query.put("name", projectName);
         ResponseEntity<String> responseEntity = RestUtils.get(url, query, String.class, rsParam.getAk(), rsParam.getSk());
-        if (responseEntity == null || !responseEntity.getStatusCode().is2xxSuccessful()){
-            logger.error("Query project: {}", responseEntity.getBody());
+        if (!responseEntity.getStatusCode().is2xxSuccessful()){
+            LOGGER.error("Query project: {}", responseEntity.getBody());
             return false;
         }
         List<Map<String, Object>> projects = (List<Map<String, Object>>) JsonUtils.parseJsonStr2Map(responseEntity.getBody()).get("projects");

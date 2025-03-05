@@ -1,15 +1,16 @@
 package com.ghca.adapter.controller;
 
 import com.ghca.adapter.model.req.ElbParam;
-import com.ghca.adapter.model.resp.Record;
 import com.ghca.adapter.model.resp.Result;
 import com.ghca.adapter.service.ElbService;
+import com.ghca.adapter.utils.Constant;
 import com.ghca.adapter.utils.JsonUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/")
 public class ElbController {
 
-    private static Logger logger = LoggerFactory.getLogger(ElbController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ElbController.class);
 
     @Resource
     private ElbService elbService;
@@ -39,22 +39,16 @@ public class ElbController {
     @ApiOperation(value = "ELB Api", httpMethod = "POST")
     @ApiResponse(code = 200, message = "Create success", response = Result.class)
     @PostMapping("resource-elb")
-    public Result resourceSpace(@RequestBody @Validated ElbParam elbParam, BindingResult bindingResult){
-        logger.info("Start bind QoS");
-        Result result = new Result();
-        ArrayList<Record> records = new ArrayList<>();
-        result.setMessage(records);
+    public Result elb(@RequestBody @Validated ElbParam elbParam, BindingResult bindingResult){
+        LOGGER.info("Start bind QoS");
+        Result result = new Result("success");
         if (bindingResult.hasErrors()){
-            Record record = new Record();
             String errorInfo = JsonUtils.parseObject2Str(bindingResult.getAllErrors()
                 .stream()
-                .map(error -> error.getDefaultMessage())
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining(",")));
-            logger.error("Param validation failed: {}", errorInfo);
-            record.setOperation("Param validation").setResult("Failed").setRootCause(errorInfo);
-            result.getMessage().add(record);
-            result.setResult("Failed");
-            return result;
+            LOGGER.error("Param validation failed: {}", errorInfo);
+            return result.addMessage("Param validation", Constant.FAILED, errorInfo).setResult(Constant.FAILED);
         }
         return elbService.createAndBindQoS(elbParam, result);
     }

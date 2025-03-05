@@ -1,10 +1,10 @@
 package com.ghca.adapter.service.impl;
 
 import com.ghca.adapter.model.req.ElbParam;
-import com.ghca.adapter.model.resp.Record;
 import com.ghca.adapter.model.resp.Result;
 import com.ghca.adapter.service.BaseService;
 import com.ghca.adapter.service.ElbService;
+import com.ghca.adapter.utils.Constant;
 import com.ghca.adapter.utils.JsonUtils;
 import com.ghca.adapter.utils.RestUtils;
 import com.ghca.adapter.utils.ThreadUtils;
@@ -17,7 +17,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,7 +30,7 @@ import java.util.Map;
 @Service
 public class ElbServiceImpl extends BaseService implements ElbService {
 
-    private static Logger logger = LoggerFactory.getLogger(ElbServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ElbServiceImpl.class);
 
     @Value("${QoS.L4}")
     private String qoSL4;
@@ -38,53 +40,51 @@ public class ElbServiceImpl extends BaseService implements ElbService {
 
     @Override
     public Result createAndBindQoS(ElbParam elbParam, Result result) {
-        result.setResult("success");
+        Map<String, Object> data = new HashMap<>();
+        List<Map<String, Object>> qoSs = new ArrayList<>();
+        data.put("bind", qoSs);
+        result.setData(data);
         ThreadLocal<Map<String, Object>> threadLocal = ThreadUtils.getThreadLocal();
         HashMap<String, Object> map = new HashMap<>();
-        map.put("domainId", elbParam.getResource_space());
+        map.put("projectId", elbParam.getResource_space());
         threadLocal.set(map);
         String elbDetailUrl = RestUtils.buildUrl(cloudProperties.getScheme(), cloudProperties.getHost().
-                        replace("{service}", "vpc").replace("{region}", elbParam.getRegion()), "",
+                        replace("{service}", Constant.VPC).replace("{region}", elbParam.getRegion()), "",
                 cloudProperties.getApi().get("elb").replace("{loadbalancer_id}", elbParam.getElb()));
         ResponseEntity<String> elbDetailResp = RestUtils.get(elbDetailUrl, String.class, elbParam.getAk(), elbParam.getSk());
-        if (elbDetailResp == null || !elbDetailResp.getStatusCode().is2xxSuccessful()){
-            logger.error("Query elb detail: {}", elbDetailResp.getBody());
-            result.setResult("Failed");
-            Record record = new Record();
-            record.setOperation("Query elb detail");
-            record.setResult("Failed").setRootCause(elbDetailResp.getBody());
-            result.getMessage().add(record);
-            return result;
+        if (!elbDetailResp.getStatusCode().is2xxSuccessful()){
+            LOGGER.error("Query elb detail: {}", elbDetailResp.getBody());
+            return result.addMessage("Query elb detail", Constant.FAILED, elbDetailResp.getBody()).setResult(Constant.FAILED);
         }
         String qoSL4Id = "";
         String qoSL7Id = "";
         Map<String, Object> loadbalancer = (Map<String, Object>) JsonUtils.parseJsonStr2Map(elbDetailResp.getBody()).get("loadbalancer");
         //如果符合条件的L4 QoS不存在则创建
-        if (loadbalancer.get("l4_flavor_id") != null && StringUtils.isNotBlank(loadbalancer.get("l4_flavor_id").toString())
-                && !"null".equals(loadbalancer.get("l4_flavor_id").toString())){
-            if (!isExist(elbParam, (String) loadbalancer.get("l4_flavor_id"), result)){
-                qoSL4Id = createQos(elbParam, "l4", result);
+        if (loadbalancer.get(Constant.L_4_FLAVOR_ID) != null && StringUtils.isNotBlank(loadbalancer.get(Constant.L_4_FLAVOR_ID).toString())
+                && !"null".equals(loadbalancer.get(Constant.L_4_FLAVOR_ID).toString())){
+            if (!isExist(elbParam, (String) loadbalancer.get(Constant.L_4_FLAVOR_ID), result)){
+                qoSL4Id = createQos(elbParam, Constant.L4, result);
             }
         }else {
-            qoSL4Id = createQos(elbParam, "l4", result);
+            qoSL4Id = createQos(elbParam, Constant.L4, result);
         }
         //如果符合条件的L7 QoS不存在则创建
-        if (loadbalancer.get("l7_flavor_id") != null && StringUtils.isNotBlank(loadbalancer.get("l7_flavor_id").toString())
-                && !"null".equals(loadbalancer.get("l7_flavor_id").toString())){
-            if (!isExist(elbParam, (String) loadbalancer.get("l7_flavor_id"), result)){
-                qoSL7Id = createQos(elbParam, "l7", result);
+        if (loadbalancer.get(Constant.L_7_FLAVOR_ID) != null && StringUtils.isNotBlank(loadbalancer.get(Constant.L_7_FLAVOR_ID).toString())
+                && !"null".equals(loadbalancer.get(Constant.L_7_FLAVOR_ID).toString())){
+            if (!isExist(elbParam, (String) loadbalancer.get(Constant.L_7_FLAVOR_ID), result)){
+                qoSL7Id = createQos(elbParam, Constant.L7, result);
             }
         }else {
-            qoSL7Id = createQos(elbParam, "l7", result);
+            qoSL7Id = createQos(elbParam, Constant.L7, result);
         }
-        bidnQoS(elbParam, qoSL4Id, qoSL7Id, result);
+        bindQoS(elbParam, qoSL4Id, qoSL7Id, result);
         return result;
     }
 
-    private void bidnQoS(ElbParam elbParam, String qoSL4Id, String qoSL7Id, Result result) {
+    private void bindQoS(ElbParam elbParam, String qoSL4Id, String qoSL7Id, Result result) {
         if (StringUtils.isNotBlank(qoSL4Id) || StringUtils.isNotBlank(qoSL7Id)) {
             String updateElbUrl = RestUtils.buildUrl(cloudProperties.getScheme(), cloudProperties.getHost().
-                            replace("{service}", "vpc").replace("{region}", elbParam.getRegion()), "",
+                            replace("{service}", Constant.VPC).replace("{region}", elbParam.getRegion()), "",
                     cloudProperties.getApi().get("elb").replace("{loadbalancer_id}", elbParam.getElb()));
             /*
              * {
@@ -95,48 +95,55 @@ public class ElbServiceImpl extends BaseService implements ElbService {
              * }
              */
             Map<String, Object> body = new HashMap<>();
-            Map<String, Object> loadbalancer = new HashMap<>();
+            Map<String, Object> loadBalancer = new HashMap<>();
+            List<Object> qoSs = new ArrayList<>();
             if (StringUtils.isNotBlank(qoSL4Id)) {
-                loadbalancer.put("l4_flavor_id", qoSL4Id);
+                loadBalancer.put(Constant.L_4_FLAVOR_ID, qoSL4Id);
+                Map<String, Object> qoS = new HashMap<>();
+                qoS.put("l4_qos_id", qoSL4Id);
+                qoSs.add(qoS);
             }else {
-                logger.info("L4 QoS {} already exists", qoSL4Id);
-                Record record = new Record();
-                record.setOperation("Create L4 QoS");
-                record.setResult("Failed").setRootCause("L4 QoS " + qoSL4Id + " already exists");
-                result.getMessage().add(record);
+                LOGGER.info("L4 QoS already exists");
+                result.addMessage("Bind L4 QoS",Constant.FAILED, "L4 QoS already exists");
             }
             if (StringUtils.isNotBlank(qoSL7Id)) {
-                loadbalancer.put("l7_flavor_id", qoSL7Id);
+                loadBalancer.put(Constant.L_7_FLAVOR_ID, qoSL7Id);
+                Map<String, Object> qoS = new HashMap<>();
+                qoS.put("l7_qos_id", qoSL7Id);
+                qoSs.add(qoS);
             }else {
-                logger.info("L7 QoS {} already exists", qoSL7Id);
-                Record record = new Record();
-                record.setOperation("Create L7 QoS");
-                record.setResult("Failed").setRootCause("L7 QoS " + qoSL7Id + " already exists");
-                result.getMessage().add(record);
+                LOGGER.info("L7 QoS already exists");
+                result.addMessage("Bind L7 QoS", Constant.FAILED, "L7 QoS already exists");
             }
-            body.put("loadbalancer", loadbalancer);
+            body.put("loadbalancer", loadBalancer);
             ResponseEntity<String> updateElbResp = RestUtils.put(updateElbUrl, body, String.class, elbParam.getAk(), elbParam.getSk());
-            if (updateElbResp == null || !updateElbResp.getStatusCode().is2xxSuccessful()) {
-                logger.error("Bind QoS failed: {}", updateElbResp.getBody());
-                result.setResult("Failed");
-                Record record = new Record();
-                record.setOperation("Bind QoS");
-                record.setResult("Failed").setRootCause(updateElbResp.getBody());
-                result.getMessage().add(record);
+            if (!updateElbResp.getStatusCode().is2xxSuccessful()) {
+                LOGGER.error("Bind QoS failed: {}", updateElbResp.getBody());
+                result.addMessage("Bind QoS", Constant.FAILED, updateElbResp.getBody()).setResult(Constant.FAILED);
             }
+            Map<String, Object> data = (Map<String, Object>) result.getData();
+            data.put("bind", qoSs);
+            result.setData(data);
+        }else {
+            LOGGER.info("L4 and L7 QoS already exists");
+            result.addMessage("Bind L4 QoS", Constant.FAILED, "L4 QoS already exists");
+            result.addMessage("Bind L7 QoS", Constant.FAILED, "L7 QoS already exists");
         }
     }
 
     private String createQos(ElbParam elbParam, String level, Result result) {
-        String qoSName = buildQoSName(qoSL4);
+        String prefix = "";
+        if (Constant.L4.equals(level)) {
+            prefix = qoSL4;
+        }
+        if (Constant.L7.equals(level)) {
+            prefix = qoSL7;
+        }
+        String qoSName = buildQoSName(prefix);
         ResponseEntity<String> createL4Resp = createQoS(elbParam, level, qoSName);
-        if (createL4Resp == null || !createL4Resp.getStatusCode().is2xxSuccessful()) {
-            logger.error("Create {} QoS: {}", level, createL4Resp.getBody());
-            result.setResult("Failed");
-            Record record = new Record();
-            record.setOperation("Create " + level + " QoS");
-            record.setResult("Failed").setRootCause(createL4Resp.getBody());
-            result.getMessage().add(record);
+        if (!createL4Resp.getStatusCode().is2xxSuccessful()) {
+            LOGGER.error("Create {} QoS: {}", level, createL4Resp.getBody());
+            result.addMessage("Create " + level + " QoS", Constant.FAILED, createL4Resp.getBody()).setResult(Constant.FAILED);
             return "";
         }
         Map<String, Object> flavor = (Map<String, Object>) JsonUtils.parseJsonStr2Map(createL4Resp.getBody()).get("flavor");
@@ -145,25 +152,21 @@ public class ElbServiceImpl extends BaseService implements ElbService {
 
     private boolean isExist(ElbParam elbParam, String flavorId, Result result) {
         String queryQoSUrl = RestUtils.buildUrl(cloudProperties.getScheme(), cloudProperties.getHost().
-                        replace("{service}", "vpc").replace("{region}", elbParam.getRegion()), "",
+                        replace("{service}", Constant.VPC).replace("{region}", elbParam.getRegion()), "",
                 cloudProperties.getApi().get("queryQoS").replace("{flavor_id}", flavorId));
         ResponseEntity<String> queryQoSResp = RestUtils.get(queryQoSUrl, String.class, elbParam.getAk(), elbParam.getSk());
-        if (queryQoSResp == null || !queryQoSResp.getStatusCode().is2xxSuccessful()) {
-            logger.error("Query QoS: {}", queryQoSResp.getBody());
-            result.setResult("Failed");
-            Record record = new Record();
-            record.setOperation("Query QoS");
-            record.setResult("Failed").setRootCause(queryQoSResp.getBody());
-            result.getMessage().add(record);
+        if (!queryQoSResp.getStatusCode().is2xxSuccessful()) {
+            LOGGER.error("Query QoS: {}", queryQoSResp.getBody());
+            result.addMessage("Query QoS", Constant.FAILED, queryQoSResp.getBody()).setResult(Constant.FAILED);
             return false;
         }
         Map<String, Object> flavor = (Map<String, Object>) JsonUtils.parseJsonStr2Map(queryQoSResp.getBody()).get("flavor");
         String name = (String) flavor.get("name");
         String type = (String) flavor.get("type");
-        if ("l4".equals(type)) {
+        if (Constant.L4.equals(type)) {
             return name.startsWith(qoSL4);
         }
-        if ("l7".equals(type)) {
+        if (Constant.L7.equals(type)) {
             return name.startsWith(qoSL7);
         }
         return false;
@@ -171,7 +174,7 @@ public class ElbServiceImpl extends BaseService implements ElbService {
 
     private ResponseEntity<String> createQoS(ElbParam elbParam, String level, String flavorName) {
         String createQoSUrl = RestUtils.buildUrl(cloudProperties.getScheme(), cloudProperties.getHost().
-                        replace("{service}", "vpc").replace("{region}", elbParam.getRegion()), "",
+                        replace("{service}", Constant.VPC).replace("{region}", elbParam.getRegion()), "",
                 cloudProperties.getApi().get("qoS"));
         /*
          * {
@@ -195,11 +198,10 @@ public class ElbServiceImpl extends BaseService implements ElbService {
 
     private String buildQoSName(String prefix) {
         StringBuilder name = new StringBuilder(prefix);
+        name.append(System.currentTimeMillis());
         SecureRandom secureRandom = new SecureRandom();
         for (int i = 0; i < 5; i++) {
-            int randomInt = secureRandom.nextInt(26);
-            int ascii = randomInt + 'a';
-            name.append((char) ascii);
+            name.append(secureRandom.nextInt(10));
         }
         return name.toString();
     }
